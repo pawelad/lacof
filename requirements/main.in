@@ -1,7 +1,12 @@
 # Main
 fastapi
-pydantic
+pydantic>=2
 pydantic-settings
+
+# ORM
+alembic
+asyncpg
+sqlalchemy[asyncio]>=2
 
 # Web server
 gunicorn
