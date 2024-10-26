@@ -1,0 +1,9 @@
+# Main
+fastapi
+pydantic
+pydantic-settings
+
+# Web server
+gunicorn
+uvicorn
+uvloop

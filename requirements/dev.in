@@ -1,0 +1,14 @@
+-c main.txt
+
+# Code style
+black
+interrogate
+isort
+ruff
+
+# Type checking
+mypy
+
+# Tooling
+nox
+pip-tools
