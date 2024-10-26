@@ -40,6 +40,14 @@ upgrade-all: ## Upgrade all Python packages
 run: ## Run the app
 	gunicorn --pythonpath=src --worker-class=uvicorn.workers.UvicornWorker --reload lacof.app
 
+.PHONY: create-migration
+create-migration: ## Create Alembic migration (pass "name=<MIGRATION_NAME>")
+	alembic revision --autogenerate -m "$(name)"
+
+.PHONY: apply-migrations
+apply-migrations: ## Apply Alembic migrations
+	alembic upgrade head
+
 .PHONY: format
 format: ## Format code
 	black src/ tests/ noxfile.py
