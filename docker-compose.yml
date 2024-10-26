@@ -1,0 +1,40 @@
+services:
+  db:
+    image: "postgres:16.4"
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+      POSTGRES_DB: "lacof"
+    volumes:
+      - "postgres_data:/var/lib/postgresql/data/"
+    ports:
+      - "5432:5432"
+
+  app:
+    build:
+      context: "."
+      target: "app"
+    image: "lacof-app:latest"
+    command: "--reload"
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://postgres@db/lacof"
+    env_file: ".env"
+    volumes:
+      - ".:/home/lacof/app"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - "db"
+
+  dev:
+    build:
+      context: "."
+      target: "dev"
+    image: "lacof-dev:latest"
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://postgres@db/lacof"
+    env_file: ".env"
+    volumes:
+      - ".:/home/lacof/app"
+
+volumes:
+  postgres_data:

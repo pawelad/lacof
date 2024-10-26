@@ -2,6 +2,7 @@
 
 from typing import Literal
 
+from pydantic import PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,6 +17,9 @@ class LacofSettings(BaseSettings):
 
     ENVIRONMENT: Literal["local", "production"] = "local"
     DEBUG: bool = False
+    DATABASE_URL: PostgresDsn = PostgresDsn(
+        "postgresql+asyncpg://postgres@localhost/lacof"
+    )
 
 
 lacof_settings = LacofSettings()

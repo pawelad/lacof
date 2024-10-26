@@ -50,6 +50,22 @@ format: ## Format code
 test: ## Run the test suite
 	nox
 
+.PHONY: docker-build
+docker-build: ## Build Docker compose stack
+	docker compose build
+
+.PHONY: docker-run
+docker-run: ## Run Docker compose stack
+	docker compose up app
+
+.PHONY: docker-stop
+docker-stop: ## Stop Docker compose stack
+	docker compose down
+
+.PHONY: docker-shell
+docker-shell: ## Run bash inside dev container
+	docker compose run --rm dev /bin/bash
+
 .PHONY: clean
 clean: ## Clean dev artifacts
 	rm -rf .mypy_cache/ .nox/ .pytest_cache/ .ruff_cache/
