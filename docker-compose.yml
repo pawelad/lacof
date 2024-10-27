@@ -9,6 +9,19 @@ services:
     ports:
       - "5432:5432"
 
+  # S3 compatible object store
+  minio:
+    image: "quay.io/minio/minio:RELEASE.2024-10-13T13-34-11Z"
+    command: "server /data --console-address ':9001'"
+    environment:
+      MINIO_ROOT_USER: "minioadmin"
+      MINIO_ROOT_PASSWORD: "minioadmin"
+    volumes:
+      - "minio_data:/data"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
   app:
     build:
       context: "."
@@ -24,6 +37,7 @@ services:
       - "8000:8000"
     depends_on:
       - "db"
+      - "minio"
 
   dev:
     build:
@@ -37,4 +51,5 @@ services:
       - ".:/home/lacof/app"
 
 volumes:
+  minio_data:
   postgres_data:

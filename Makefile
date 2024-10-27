@@ -66,6 +66,10 @@ docker-build: ## Build Docker compose stack
 docker-run: ## Run Docker compose stack
 	docker compose up app
 
+.PHONY: docker-run-minio
+docker-run-minio: ## Run MinIO with Docker
+	docker compose up minio
+
 .PHONY: docker-stop
 docker-stop: ## Stop Docker compose stack
 	docker compose down
