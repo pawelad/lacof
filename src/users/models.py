@@ -2,11 +2,15 @@
 
 import secrets
 from functools import partial
+from typing import TYPE_CHECKING
 
 from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lacof.db import BaseSQLModel
+
+if TYPE_CHECKING:
+    from images.models import ImageModel
 
 
 class UserModel(BaseSQLModel):
@@ -20,3 +24,5 @@ class UserModel(BaseSQLModel):
         unique=True,
         default=partial(secrets.token_urlsafe, 32),
     )
+
+    images: Mapped[list["ImageModel"]] = relationship(back_populates="user")
