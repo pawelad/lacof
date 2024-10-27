@@ -1,7 +1,8 @@
 """Lacof main ASGI app."""
 
 from fastapi import FastAPI
-from starlette.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse, Response
+from fastapi.staticfiles import StaticFiles
 
 from lacof import __title__, __version__
 from lacof.settings import lacof_settings
@@ -13,6 +14,13 @@ application = FastAPI(
     docs_url=None,
     redoc_url="/api/v1/docs",
 )
+
+
+@application.get("/", include_in_schema=False)
+async def root() -> Response:
+    """Redirect user to API docs."""
+    return RedirectResponse("/api/v1/docs")
+
 
 # Static files
 application.mount("/static", StaticFiles(directory="static"), name="static")
