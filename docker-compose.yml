@@ -27,7 +27,7 @@ services:
       context: "."
       target: "app"
     image: "lacof-app:latest"
-    command: "--reload"
+    entrypoint: "uvicorn --app-dir=src --reload lacof.app:application"
     environment:
       DATABASE_URL: "postgresql+asyncpg://postgres@db/lacof"
     env_file: ".env"

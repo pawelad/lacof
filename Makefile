@@ -38,7 +38,7 @@ upgrade-all: ## Upgrade all Python packages
 
 .PHONY: run
 run: ## Run the app
-	gunicorn --pythonpath=src --worker-class=uvicorn.workers.UvicornWorker --reload lacof.app
+	uvicorn --app-dir=src --reload lacof.app:application
 
 .PHONY: create-migration
 create-migration: ## Create Alembic migration (pass "name=<MIGRATION_NAME>")

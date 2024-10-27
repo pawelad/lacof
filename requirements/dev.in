@@ -12,3 +12,6 @@ mypy
 # Tooling
 nox
 pip-tools
+
+# Other
+watchfiles
