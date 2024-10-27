@@ -1,7 +1,11 @@
 # Main
+boto3
 fastapi
 pydantic>=2
 pydantic-settings
+# https://github.com/fastapi/fastapi/discussions/12532
+# https://github.com/Kludex/python-multipart/pull/166
+python-multipart==0.0.12
 
 # ORM
 alembic

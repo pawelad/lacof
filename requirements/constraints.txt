@@ -26,6 +26,13 @@ attrs==24.2.0
     #   interrogate
 black==24.10.0
     # via -r requirements/dev.txt
+boto3==1.35.49
+    # via -r requirements/main.txt
+botocore==1.35.49
+    # via
+    #   -r requirements/main.txt
+    #   boto3
+    #   s3transfer
 build==1.2.2.post1
     # via
     #   -r requirements/dev.txt
@@ -72,6 +79,11 @@ interrogate==1.7.0
     # via -r requirements/dev.txt
 isort==5.13.2
     # via -r requirements/dev.txt
+jmespath==1.0.1
+    # via
+    #   -r requirements/main.txt
+    #   boto3
+    #   botocore
 mako==1.3.6
     # via
     #   -r requirements/main.txt
@@ -128,12 +140,26 @@ pyproject-hooks==1.2.0
     #   -r requirements/dev.txt
     #   build
     #   pip-tools
+python-dateutil==2.9.0.post0
+    # via
+    #   -r requirements/main.txt
+    #   botocore
 python-dotenv==1.0.1
     # via
     #   -r requirements/main.txt
     #   pydantic-settings
+python-multipart==0.0.12
+    # via -r requirements/main.txt
 ruff==0.7.1
     # via -r requirements/dev.txt
+s3transfer==0.10.3
+    # via
+    #   -r requirements/main.txt
+    #   boto3
+six==1.16.0
+    # via
+    #   -r requirements/main.txt
+    #   python-dateutil
 sniffio==1.3.1
     # via
     #   -r requirements/main.txt
@@ -160,6 +186,10 @@ typing-extensions==4.12.2
     #   pydantic
     #   pydantic-core
     #   sqlalchemy
+urllib3==2.2.3
+    # via
+    #   -r requirements/main.txt
+    #   botocore
 uvicorn==0.32.0
     # via -r requirements/main.txt
 uvloop==0.21.0
