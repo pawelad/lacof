@@ -1,3 +1,10 @@
+x-common-variables: &common-variables
+  DATABASE_URL: "postgresql+asyncpg://postgres@db/lacof"
+  AWS_ACCESS_KEY_ID: "minioadmin"
+  AWS_SECRET_ACCESS_KEY: "minioadmin"
+  S3_ENDPOINT_URL: "http://minio:9000"
+  S3_BUCKET_NAME: "lacof"
+
 services:
   db:
     image: "postgres:16.4"
@@ -27,9 +34,8 @@ services:
       context: "."
       target: "app"
     image: "lacof-app:latest"
-    entrypoint: "uvicorn --app-dir=src --reload lacof.app:application"
-    environment:
-      DATABASE_URL: "postgresql+asyncpg://postgres@db/lacof"
+    entrypoint: "uvicorn --app-dir=src --host=0.0.0.0 --reload lacof.app:application"
+    environment: *common-variables
     env_file: ".env"
     volumes:
       - ".:/home/lacof/app"
@@ -44,8 +50,7 @@ services:
       context: "."
       target: "dev"
     image: "lacof-dev:latest"
-    environment:
-      DATABASE_URL: "postgresql+asyncpg://postgres@db/lacof"
+    environment: *common-variables
     env_file: ".env"
     volumes:
       - ".:/home/lacof/app"

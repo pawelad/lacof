@@ -1,6 +1,6 @@
 """Images app routes."""
 
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import Response
@@ -10,8 +10,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from images.models import ImageModel
 from images.schemas import Image
 from lacof.db import get_db_session
+from lacof.dependencies import get_s3_bucket
 from users.auth import get_current_user
 from users.schemas import User
+
+if TYPE_CHECKING:
+    from mypy_boto3_s3.service_resource import Bucket
 
 images_router = APIRouter(prefix="/images", tags=["images"])
 
@@ -36,6 +40,7 @@ async def create_image(
     file: UploadFile,
     session: Annotated[AsyncSession, Depends(get_db_session)],
     user: Annotated[User, Depends(get_current_user)],
+    s3_bucket: Annotated["Bucket", Depends(get_s3_bucket)],
 ) -> Image:
     """Upload a new image."""
     image_orm = ImageModel(
@@ -44,10 +49,17 @@ async def create_image(
         file_path=ImageModel.generate_file_path(file.filename),
         content_type=file.content_type,
     )
-    # TODO: Save file to S3
     session.add(image_orm)
     await session.commit()
     await session.refresh(image_orm)
+
+    # Save file to S3
+    s3_bucket.upload_fileobj(
+        Fileobj=file.file,
+        Key=image_orm.file_path,
+        ExtraArgs={"ContentType": image_orm.content_type},
+    )
+
     image = Image.model_validate(image_orm)
     return image
 

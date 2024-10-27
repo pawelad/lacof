@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from pydantic import PostgresDsn
+from pydantic import HttpUrl, PostgresDsn, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -20,6 +20,10 @@ class LacofSettings(BaseSettings):
     DATABASE_URL: PostgresDsn = PostgresDsn(
         "postgresql+asyncpg://postgres@localhost/lacof"
     )
+    AWS_ACCESS_KEY_ID: str = "minioadmin"
+    AWS_SECRET_ACCESS_KEY: SecretStr = SecretStr("minioadmin")
+    S3_ENDPOINT_URL: HttpUrl = HttpUrl("http://localhost:9000")
+    S3_BUCKET_NAME: str = "lacof"
 
 
 lacof_settings = LacofSettings()
