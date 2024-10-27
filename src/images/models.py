@@ -25,15 +25,25 @@ class ImageModel(BaseSQLModel):
     content_type: Mapped[str] = mapped_column(String(128))
 
     @classmethod
-    def generate_file_path(cls, file_name: str) -> str:
-        """Generate unique file path."""
-        file_name_path = Path(file_name)
-        file_name_stem = file_name_path.stem
-        file_extension = file_name_path.suffix
+    def generate_file_path(cls, file_name: str | None) -> str:
+        """Generate unique file path.
 
+        Arguments:
+            file_name: File name to generate the path for. If empty, a random string
+                will be used.
+        """
         directory = Path(cls.__tablename__)
-        suffix = secrets.token_hex(16)
 
-        file_path = directory / f"{file_name_stem}-{suffix}{file_extension}"
+        if file_name:
+            file_name_path = Path(file_name)
+            file_name_stem = file_name_path.stem
+            file_extension = file_name_path.suffix
+            suffix = secrets.token_hex(16)
+
+            new_file_name = f"{file_name_stem}-{suffix}{file_extension}"
+        else:
+            new_file_name = secrets.token_hex(32)
+
+        file_path = directory / new_file_name
 
         return str(file_path)
