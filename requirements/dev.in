@@ -8,6 +8,7 @@ ruff
 
 # Type checking
 mypy
+boto3-stubs[s3]
 
 # Tooling
 nox

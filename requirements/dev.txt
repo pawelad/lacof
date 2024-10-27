@@ -42,6 +42,14 @@ black==24.10.0 \
     --hash=sha256:f9da3333530dbcecc1be13e69c250ed8dfa67f43c4005fb537bb426e19200d50 \
     --hash=sha256:fe4d6476887de70546212c99ac9bd803d90b42fc4767f058a0baa895013fbb3e
     # via -r requirements/dev.in
+boto3-stubs==1.35.49 \
+    --hash=sha256:2a2e08ba2383df6f478127f9754a02a590131249b40c59d7c6ca9fce76906785 \
+    --hash=sha256:daad87dcff906f7c09dde4ef3c252e2c47b6e1e8e669f5a8311658ac0d1182c0
+    # via -r requirements/dev.in
+botocore-stubs==1.35.49 \
+    --hash=sha256:367ce067e003de7e9b76320f551ba4fc8369a4b7ef10210f6071d3593fea2605 \
+    --hash=sha256:c5006e31d77e290eca215e6a71292ea7b029b54900310ed0f87da8e844f1db38
+    # via boto3-stubs
 build==1.2.2.post1 \
     --hash=sha256:1d61c0887fa860c01971625baae8bdd338e517b836a2f70dd1f7aa3a6b2fc5b5 \
     --hash=sha256:b36993e92ca9375a219c99e606a122ff365a760a2d4bba0caa09bd5278b608b7
@@ -118,6 +126,10 @@ mypy==1.13.0 \
     --hash=sha256:c5fc54dbb712ff5e5a0fca797e6e0aa25726c7e72c6a5850cfd2adbc1eb0a372 \
     --hash=sha256:de2904956dac40ced10931ac967ae63c5089bd498542194b436eb097a9f77bc8
     # via -r requirements/dev.in
+mypy-boto3-s3==1.35.46 \
+    --hash=sha256:34d19dfba400f5b9bd6b64f09eb8f8eedef60545b410a3753fe99fec0c41ba78 \
+    --hash=sha256:f0087a3765d103b2db565cd8065ebc2b0f70f2dd4e92c132f64b8945dd869940
+    # via boto3-stubs
 mypy-extensions==1.0.0 \
     --hash=sha256:4392f6c0eb8a5668a69e23d168ffa70f0be9ccfd32b5cc2d26a34ae5b844552d \
     --hash=sha256:75dbf8955dc00442a438fc4d0666508a9a97b6bd41aa2f0ffe9d2f2725af0782
@@ -190,6 +202,14 @@ tabulate==0.9.0 \
     --hash=sha256:0095b12bf5966de529c0feb1fa08671671b3368eec77d7ef7ab114be2c068b3c \
     --hash=sha256:024ca478df22e9340661486f85298cff5f6dcdba14f3813e8830015b9ed1948f
     # via interrogate
+types-awscrt==0.23.0 \
+    --hash=sha256:3fd1edeac923d1956c0e907c973fb83bda465beae7f054716b371b293f9b5fdc \
+    --hash=sha256:517d9d06f19cf58d778ca90ad01e52e0489466bf70dcf78c7f47f74fdf151a60
+    # via botocore-stubs
+types-s3transfer==0.10.3 \
+    --hash=sha256:d34c5a82f531af95bb550927136ff5b737a1ed3087f90a59d545591dfde5b4cc \
+    --hash=sha256:f761b2876ac4c208e6c6b75cdf5f6939009768be9950c545b11b0225e7703ee7
+    # via boto3-stubs
 typing-extensions==4.12.2 \
     --hash=sha256:04e5ca0351e0f3f85c6853954072df659d0d13fac324d0072316b67d7794700d \
     --hash=sha256:1a7ead55c7e559dd4dee8856e3a88b41225abfe1ce8df57b7c13915fe121ffb8

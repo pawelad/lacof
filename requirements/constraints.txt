@@ -30,11 +30,17 @@ black==24.10.0
     # via -r requirements/dev.txt
 boto3==1.35.49
     # via -r requirements/main.txt
+boto3-stubs==1.35.49
+    # via -r requirements/dev.txt
 botocore==1.35.49
     # via
     #   -r requirements/main.txt
     #   boto3
     #   s3transfer
+botocore-stubs==1.35.49
+    # via
+    #   -r requirements/dev.txt
+    #   boto3-stubs
 build==1.2.2.post1
     # via
     #   -r requirements/dev.txt
@@ -96,6 +102,8 @@ markupsafe==3.0.2
     #   -r requirements/main.txt
     #   mako
 mypy==1.13.0
+    # via -r requirements/dev.txt
+mypy-boto3-s3==1.35.46
     # via -r requirements/dev.txt
 mypy-extensions==1.0.0
     # via
@@ -180,6 +188,14 @@ tabulate==0.9.0
     # via
     #   -r requirements/dev.txt
     #   interrogate
+types-awscrt==0.23.0
+    # via
+    #   -r requirements/dev.txt
+    #   botocore-stubs
+types-s3transfer==0.10.3
+    # via
+    #   -r requirements/dev.txt
+    #   boto3-stubs
 typing-extensions==4.12.2
     # via
     #   -r requirements/dev.txt
