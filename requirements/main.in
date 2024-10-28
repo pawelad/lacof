@@ -1,5 +1,5 @@
 # Main
-boto3
+aioboto3
 fastapi
 pydantic>=2
 pydantic-settings

@@ -1,23 +1,23 @@
 """Images app routes."""
 
-import io
 from typing import TYPE_CHECKING, Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, UploadFile, status
-from fastapi.responses import Response
+from fastapi.responses import Response, StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from images.models import IMAGE_CONTENT_TYPES, ImageModel
+from images.models import ImageModel
 from images.schemas import Image
 from lacof.db import get_db_session
-from lacof.dependencies import get_s3_bucket
+from lacof.dependencies import get_s3_client
+from lacof.settings import lacof_settings
 from lacof.utils import API_ERROR_SCHEMA
 from users.auth import get_current_user
 from users.schemas import User
 
 if TYPE_CHECKING:
-    from mypy_boto3_s3.service_resource import Bucket
+    from types_aiobotocore_s3 import S3Client
 
 images_router = APIRouter(prefix="/images", tags=["images"])
 
@@ -50,7 +50,7 @@ async def create_image(
     file: UploadFile,
     session: Annotated[AsyncSession, Depends(get_db_session)],
     user: Annotated[User, Depends(get_current_user)],
-    s3_bucket: Annotated["Bucket", Depends(get_s3_bucket)],
+    s3_client: Annotated["S3Client", Depends(get_s3_client)],
 ) -> Image:
     """Upload a new image.
 
@@ -74,12 +74,14 @@ async def create_image(
     await session.commit()
     await session.refresh(image_orm)
 
-    # Save file to S3
-    s3_bucket.upload_fileobj(
+    # Upload file to S3
+    await s3_client.upload_fileobj(
         Fileobj=file.file,
+        Bucket=lacof_settings.S3_BUCKET_NAME,
         Key=image_orm.file_path,
         ExtraArgs={"ContentType": image_orm.content_type},
     )
+    # TODO: Check for upload success?
 
     image = Image.model_validate(image_orm)
     return image
@@ -112,18 +114,21 @@ async def get_image(
     return image
 
 
-# TODO: Streaming response?
-# TODO: OpenAPI schema (and docs) for `FileResponse` are incorrectly generated
-#   (see: https://github.com/fastapi/fastapi/discussions/9551. And even when using
-#   base `Response`, it always marks "application/json" as valid content response...
-#   (see: https://github.com/fastapi/fastapi/discussions/6650).
 @images_router.get(
     "/{image_id}/download",
-    response_model=None,
+    # Automatically generated OpenAPI schema (and thus docs) for `StreamingResponse`
+    # are incorrect (see: https://github.com/fastapi/fastapi/discussions/3881).
+    response_class=StreamingResponse,
     responses={
         200: {
             "description": "Requested image content",
-            "content": {content_type: {} for content_type in IMAGE_CONTENT_TYPES},
+            "headers": {
+                "Transfer-Encoding": {
+                    "schema": {"type": "string"},
+                    "description": "chunked",
+                },
+            },
+            "content": {"image/*": {"schema": {"type": "string", "format": "binary"}}},
         },
         404: {"description": "Image not found", "content": API_ERROR_SCHEMA},
     },
@@ -133,8 +138,8 @@ async def download_image(
     session: Annotated[AsyncSession, Depends(get_db_session)],
     # TODO: Should auth be separate from `get_current_user`?
     user: Annotated[User, Depends(get_current_user)],
-    s3_bucket: Annotated["Bucket", Depends(get_s3_bucket)],
-) -> Response:
+    s3_client: Annotated["S3Client", Depends(get_s3_client)],
+) -> StreamingResponse:
     """Download an image."""
     stmt = select(ImageModel).where(ImageModel.id == image_id)
     image_orm = await session.scalar(stmt)
@@ -145,17 +150,19 @@ async def download_image(
             detail="Image not found",
         )
 
-    buffer = io.BytesIO()
-    s3_bucket.download_fileobj(
+    # Stream file from S3
+    s3_image = await s3_client.get_object(
+        Bucket=lacof_settings.S3_BUCKET_NAME,
         Key=image_orm.file_path,
-        Fileobj=buffer,
     )
-    buffer.seek(0)
+    s3_stream = (chunk async for chunk in s3_image["Body"])
 
-    headers = {"Content-Disposition": f'inline; filename="{image_orm.file_name}"'}
+    headers = {
+        "Content-Disposition": f'inline; filename="{image_orm.file_name}"',
+    }
 
-    return Response(
-        content=buffer.getvalue(),
+    return StreamingResponse(
+        content=s3_stream,
         headers=headers,
         media_type=image_orm.content_type,
     )

@@ -4,6 +4,32 @@
 #
 #    make pip-compile
 #
+aioboto3==13.2.0
+    # via -r requirements/main.txt
+aiobotocore==2.15.2
+    # via
+    #   -r requirements/main.txt
+    #   aioboto3
+aiofiles==24.1.0
+    # via
+    #   -r requirements/main.txt
+    #   aioboto3
+aiohappyeyeballs==2.4.3
+    # via
+    #   -r requirements/main.txt
+    #   aiohttp
+aiohttp==3.10.10
+    # via
+    #   -r requirements/main.txt
+    #   aiobotocore
+aioitertools==0.12.0
+    # via
+    #   -r requirements/main.txt
+    #   aiobotocore
+aiosignal==1.3.1
+    # via
+    #   -r requirements/main.txt
+    #   aiohttp
 alembic==1.13.3
     # via -r requirements/main.txt
 annotated-types==0.7.0
@@ -25,22 +51,26 @@ asyncpg==0.30.0
 attrs==24.2.0
     # via
     #   -r requirements/dev.txt
+    #   -r requirements/main.txt
+    #   aiohttp
     #   interrogate
 black==24.10.0
     # via -r requirements/dev.txt
-boto3==1.35.49
-    # via -r requirements/main.txt
-boto3-stubs==1.35.49
-    # via -r requirements/dev.txt
-botocore==1.35.49
+boto3==1.35.36
     # via
     #   -r requirements/main.txt
+    #   aiobotocore
+botocore==1.35.36
+    # via
+    #   -r requirements/main.txt
+    #   aiobotocore
     #   boto3
     #   s3transfer
 botocore-stubs==1.35.49
     # via
     #   -r requirements/dev.txt
-    #   boto3-stubs
+    #   types-aioboto3
+    #   types-aiobotocore
 build==1.2.2.post1
     # via
     #   -r requirements/dev.txt
@@ -71,6 +101,11 @@ filelock==3.16.1
     # via
     #   -r requirements/dev.txt
     #   virtualenv
+frozenlist==1.5.0
+    # via
+    #   -r requirements/main.txt
+    #   aiohttp
+    #   aiosignal
 greenlet==3.1.1
     # via -r requirements/main.txt
 gunicorn==23.0.0
@@ -84,6 +119,7 @@ idna==3.10
     #   -r requirements/dev.txt
     #   -r requirements/main.txt
     #   anyio
+    #   yarl
 interrogate==1.7.0
     # via -r requirements/dev.txt
 isort==5.13.2
@@ -101,9 +137,12 @@ markupsafe==3.0.2
     # via
     #   -r requirements/main.txt
     #   mako
+multidict==6.1.0
+    # via
+    #   -r requirements/main.txt
+    #   aiohttp
+    #   yarl
 mypy==1.13.0
-    # via -r requirements/dev.txt
-mypy-boto3-s3==1.35.46
     # via -r requirements/dev.txt
 mypy-extensions==1.0.0
     # via
@@ -131,6 +170,10 @@ platformdirs==4.3.6
     #   -r requirements/dev.txt
     #   black
     #   virtualenv
+propcache==0.2.0
+    # via
+    #   -r requirements/main.txt
+    #   yarl
 py==1.11.0
     # via
     #   -r requirements/dev.txt
@@ -188,6 +231,14 @@ tabulate==0.9.0
     # via
     #   -r requirements/dev.txt
     #   interrogate
+types-aioboto3==13.2.0
+    # via -r requirements/dev.txt
+types-aiobotocore==2.15.2
+    # via
+    #   -r requirements/dev.txt
+    #   types-aioboto3
+types-aiobotocore-s3==2.15.2
+    # via -r requirements/dev.txt
 types-awscrt==0.23.0
     # via
     #   -r requirements/dev.txt
@@ -195,7 +246,7 @@ types-awscrt==0.23.0
 types-s3transfer==0.10.3
     # via
     #   -r requirements/dev.txt
-    #   boto3-stubs
+    #   types-aioboto3
 typing-extensions==4.12.2
     # via
     #   -r requirements/dev.txt
@@ -224,6 +275,14 @@ wheel==0.44.0
     # via
     #   -r requirements/dev.txt
     #   pip-tools
+wrapt==1.16.0
+    # via
+    #   -r requirements/main.txt
+    #   aiobotocore
+yarl==1.16.0
+    # via
+    #   -r requirements/main.txt
+    #   aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:
 pip==24.2
