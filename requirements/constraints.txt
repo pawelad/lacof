@@ -75,6 +75,14 @@ build==1.2.2.post1
     # via
     #   -r requirements/dev.txt
     #   pip-tools
+certifi==2024.8.30
+    # via
+    #   -r requirements/main.txt
+    #   requests
+charset-normalizer==3.4.0
+    # via
+    #   -r requirements/main.txt
+    #   requests
 click==8.1.7
     # via
     #   -r requirements/dev.txt
@@ -100,12 +108,21 @@ fastapi==0.115.3
 filelock==3.16.1
     # via
     #   -r requirements/dev.txt
+    #   -r requirements/main.txt
+    #   huggingface-hub
+    #   torch
+    #   transformers
     #   virtualenv
 frozenlist==1.5.0
     # via
     #   -r requirements/main.txt
     #   aiohttp
     #   aiosignal
+fsspec==2024.10.0
+    # via
+    #   -r requirements/main.txt
+    #   huggingface-hub
+    #   torch
 greenlet==3.1.1
     # via -r requirements/main.txt
 gunicorn==23.0.0
@@ -114,21 +131,36 @@ h11==0.14.0
     # via
     #   -r requirements/main.txt
     #   uvicorn
+huggingface-hub==0.26.2
+    # via
+    #   -r requirements/main.txt
+    #   sentence-transformers
+    #   tokenizers
+    #   transformers
 idna==3.10
     # via
     #   -r requirements/dev.txt
     #   -r requirements/main.txt
     #   anyio
+    #   requests
     #   yarl
 interrogate==1.7.0
     # via -r requirements/dev.txt
 isort==5.13.2
     # via -r requirements/dev.txt
+jinja2==3.1.4
+    # via
+    #   -r requirements/main.txt
+    #   torch
 jmespath==1.0.1
     # via
     #   -r requirements/main.txt
     #   boto3
     #   botocore
+joblib==1.4.2
+    # via
+    #   -r requirements/main.txt
+    #   scikit-learn
 mako==1.3.6
     # via
     #   -r requirements/main.txt
@@ -136,7 +168,18 @@ mako==1.3.6
 markupsafe==3.0.2
     # via
     #   -r requirements/main.txt
+    #   jinja2
     #   mako
+mpmath==1.3.0
+    # via
+    #   -r requirements/main.txt
+    #   sympy
+msgpack==1.1.0
+    # via
+    #   -r requirements/main.txt
+    #   msgpack-numpy
+msgpack-numpy==0.4.8
+    # via -r requirements/main.txt
 multidict==6.1.0
     # via
     #   -r requirements/main.txt
@@ -149,8 +192,19 @@ mypy-extensions==1.0.0
     #   -r requirements/dev.txt
     #   black
     #   mypy
+networkx==3.4.2
+    # via
+    #   -r requirements/main.txt
+    #   torch
 nox==2024.10.9
     # via -r requirements/dev.txt
+numpy==2.1.2
+    # via
+    #   -r requirements/main.txt
+    #   msgpack-numpy
+    #   scikit-learn
+    #   scipy
+    #   transformers
 packaging==24.1
     # via
     #   -r requirements/dev.txt
@@ -158,11 +212,17 @@ packaging==24.1
     #   black
     #   build
     #   gunicorn
+    #   huggingface-hub
     #   nox
+    #   transformers
 pathspec==0.12.1
     # via
     #   -r requirements/dev.txt
     #   black
+pillow==11.0.0
+    # via
+    #   -r requirements/main.txt
+    #   sentence-transformers
 pip-tools==7.4.1
     # via -r requirements/dev.txt
 platformdirs==4.3.6
@@ -204,12 +264,43 @@ python-dotenv==1.0.1
     #   pydantic-settings
 python-multipart==0.0.12
     # via -r requirements/main.txt
+pyyaml==6.0.2
+    # via
+    #   -r requirements/main.txt
+    #   huggingface-hub
+    #   transformers
+redis==5.2.0
+    # via -r requirements/main.txt
+regex==2024.9.11
+    # via
+    #   -r requirements/main.txt
+    #   transformers
+requests==2.32.3
+    # via
+    #   -r requirements/main.txt
+    #   huggingface-hub
+    #   transformers
 ruff==0.7.1
     # via -r requirements/dev.txt
 s3transfer==0.10.3
     # via
     #   -r requirements/main.txt
     #   boto3
+safetensors==0.4.5
+    # via
+    #   -r requirements/main.txt
+    #   transformers
+scikit-learn==1.5.2
+    # via
+    #   -r requirements/main.txt
+    #   sentence-transformers
+scipy==1.14.1
+    # via
+    #   -r requirements/main.txt
+    #   scikit-learn
+    #   sentence-transformers
+sentence-transformers==3.2.1
+    # via -r requirements/main.txt
 six==1.16.0
     # via
     #   -r requirements/main.txt
@@ -227,10 +318,36 @@ starlette==0.41.0
     # via
     #   -r requirements/main.txt
     #   fastapi
+sympy==1.13.1
+    # via
+    #   -r requirements/main.txt
+    #   torch
 tabulate==0.9.0
     # via
     #   -r requirements/dev.txt
     #   interrogate
+threadpoolctl==3.5.0
+    # via
+    #   -r requirements/main.txt
+    #   scikit-learn
+tokenizers==0.20.1
+    # via
+    #   -r requirements/main.txt
+    #   transformers
+torch==2.5.0
+    # via
+    #   -r requirements/main.txt
+    #   sentence-transformers
+tqdm==4.66.6
+    # via
+    #   -r requirements/main.txt
+    #   huggingface-hub
+    #   sentence-transformers
+    #   transformers
+transformers==4.46.0
+    # via
+    #   -r requirements/main.txt
+    #   sentence-transformers
 types-aioboto3==13.2.0
     # via -r requirements/dev.txt
 types-aiobotocore==2.15.2
@@ -253,14 +370,17 @@ typing-extensions==4.12.2
     #   -r requirements/main.txt
     #   alembic
     #   fastapi
+    #   huggingface-hub
     #   mypy
     #   pydantic
     #   pydantic-core
     #   sqlalchemy
+    #   torch
 urllib3==2.2.3
     # via
     #   -r requirements/main.txt
     #   botocore
+    #   requests
 uvicorn==0.32.0
     # via -r requirements/main.txt
 uvloop==0.21.0
@@ -292,4 +412,6 @@ pip==24.2
 setuptools==75.2.0
     # via
     #   -r requirements/dev.txt
+    #   -r requirements/main.txt
     #   pip-tools
+    #   torch

@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 from typing import TYPE_CHECKING
 
 import aioboto3
+import redis.asyncio as redis
 from fastapi import Request
 
 from lacof.settings import lacof_settings
@@ -34,3 +35,14 @@ async def get_s3_client(request: Request) -> AsyncGenerator["S3Client", None]:
         )
     )
     yield s3_client
+
+
+async def get_redis_client(request: Request) -> AsyncGenerator["redis.Redis", None]:
+    """Initialize and return a Redis client.
+
+    Meant to be used as a FastAPI dependency.
+    """
+    redis_connection_pool = request.state.redis_connection_pool
+    redis_client = redis.Redis(connection_pool=redis_connection_pool)
+    yield redis_client
+    await redis_client.aclose()

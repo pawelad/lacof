@@ -12,6 +12,11 @@ alembic
 asyncpg
 sqlalchemy[asyncio]>=2
 
+# Machine Learning
+msgpack-numpy
+redis
+sentence-transformers
+
 # Web server
 gunicorn
 uvicorn

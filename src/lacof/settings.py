@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from pydantic import HttpUrl, PostgresDsn, SecretStr
+from pydantic import HttpUrl, PostgresDsn, RedisDsn, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,13 +17,20 @@ class LacofSettings(BaseSettings):
 
     ENVIRONMENT: Literal["local", "production"] = "local"
     DEBUG: bool = False
+
     DATABASE_URL: PostgresDsn = PostgresDsn(
         "postgresql+asyncpg://postgres@localhost/lacof"
     )
+    REDIS_URL: RedisDsn = RedisDsn("redis://localhost:6379/0")
+
+    # S3
     AWS_ACCESS_KEY_ID: str = "minioadmin"
     AWS_SECRET_ACCESS_KEY: SecretStr = SecretStr("minioadmin")
     S3_ENDPOINT_URL: HttpUrl = HttpUrl("http://localhost:9000")
     S3_BUCKET_NAME: str = "lacof"
+
+    # ML
+    CLIP_MODEL_NAME: str = "clip-ViT-B-32"
 
 
 lacof_settings = LacofSettings()

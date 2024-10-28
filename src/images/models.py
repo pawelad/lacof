@@ -30,19 +30,11 @@ class ImageModel(BaseSQLModel):
     file_path: Mapped[str] = mapped_column(String(255), unique=True)
     content_type: Mapped[str] = mapped_column(String(128))
 
-    @validates("content_type")
-    def validate_content_type(self, key: str, content_type: str) -> str:
-        """Only accept image content types.
-
-        It won't be "100% foolproof" (for that, we would probably need to involve
-        `python-magic`), but still seems like a good idea to not allow all file types.
-        """
-        if content_type not in IMAGE_CONTENT_TYPES:
-            raise ValueError(
-                f"Unsupported file type '{content_type or ""}'. "
-                f"Only JPG/JPEG and PNG files are allowed."
-            )
-        return content_type
+    @property
+    def clip_embeddings_cache_key(self) -> str:
+        """TODO: Docstrings."""
+        key_name = f"{self.__tablename__}:{self.id}:clip_embeddings"
+        return key_name
 
     @classmethod
     def generate_file_path(cls, file_name: str | None) -> str:
@@ -67,3 +59,17 @@ class ImageModel(BaseSQLModel):
         file_path = directory / new_file_name
 
         return str(file_path)
+
+    @validates("content_type")
+    def validate_content_type(self, key: str, content_type: str) -> str:
+        """Only accept image content types.
+
+        It won't be "100% foolproof" (for that, we would probably need to involve
+        `python-magic`), but still seems like a good idea to not allow all file types.
+        """
+        if content_type not in IMAGE_CONTENT_TYPES:
+            raise ValueError(
+                f"Unsupported file type '{content_type or ""}'. "
+                f"Only JPG/JPEG and PNG files are allowed."
+            )
+        return content_type

@@ -1,5 +1,6 @@
 x-common-variables: &common-variables
   DATABASE_URL: "postgresql+asyncpg://postgres@db/lacof"
+  REDIS_URL: "redis://redis:6379/0"
   AWS_ACCESS_KEY_ID: "minioadmin"
   AWS_SECRET_ACCESS_KEY: "minioadmin"
   S3_ENDPOINT_URL: "http://minio:9000"
@@ -29,6 +30,11 @@ services:
       - "9000:9000"
       - "9001:9001"
 
+  redis:
+    image: "redis:6.2"
+    ports:
+      - "6379:6379"
+
   app:
     build:
       context: "."
@@ -44,6 +50,7 @@ services:
     depends_on:
       - "db"
       - "minio"
+      - "redis"
 
   dev:
     build:

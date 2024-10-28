@@ -1,16 +1,33 @@
 """Images app routes."""
 
+from io import BytesIO
 from typing import TYPE_CHECKING, Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Path, UploadFile, status
+import redis.asyncio as redis
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    HTTPException,
+    Path,
+    Request,
+    UploadFile,
+    status,
+)
 from fastapi.responses import Response, StreamingResponse
+from sentence_transformers.util import semantic_search
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from images.models import ImageModel
 from images.schemas import Image
+from images.services import (
+    calculate_and_set_cache_image_model_embeddings,
+    get_image_model_embeddings,
+    stream_image_data_from_s3,
+)
 from lacof.db import get_db_session
-from lacof.dependencies import get_s3_client
+from lacof.dependencies import get_redis_client, get_s3_client
 from lacof.settings import lacof_settings
 from lacof.utils import API_ERROR_SCHEMA
 from users.auth import get_current_user
@@ -47,10 +64,13 @@ async def list_images(
     responses={201: {"description": "Image successfully created"}},
 )
 async def create_image(
+    request: Request,
     file: UploadFile,
+    background_tasks: BackgroundTasks,
     session: Annotated[AsyncSession, Depends(get_db_session)],
     user: Annotated[User, Depends(get_current_user)],
     s3_client: Annotated["S3Client", Depends(get_s3_client)],
+    redis_client: Annotated[redis.Redis, Depends(get_redis_client)],
 ) -> Image:
     """Upload a new image.
 
@@ -74,14 +94,27 @@ async def create_image(
     await session.commit()
     await session.refresh(image_orm)
 
+    # If it was only S3, we could 'stream' it, but because we also need it for the
+    # background task, we might as well load it into memory straight away.
+    image_data = BytesIO(await file.read())
+
     # Upload file to S3
     await s3_client.upload_fileobj(
-        Fileobj=file.file,
+        Fileobj=image_data,
         Bucket=lacof_settings.S3_BUCKET_NAME,
         Key=image_orm.file_path,
         ExtraArgs={"ContentType": image_orm.content_type},
     )
     # TODO: Check for upload success?
+
+    # Generate and cache Clip model embeddings
+    background_tasks.add_task(
+        calculate_and_set_cache_image_model_embeddings,
+        model=request.state.clip_model,
+        image_data=image_data,
+        redis_client=redis_client,
+        key_name=image_orm.clip_embeddings_cache_key,
+    )
 
     image = Image.model_validate(image_orm)
     return image
@@ -134,6 +167,7 @@ async def get_image(
     },
 )
 async def download_image(
+    request: Request,
     image_id: Annotated[int, Path(title="Image ID")],
     session: Annotated[AsyncSession, Depends(get_db_session)],
     # TODO: Should auth be separate from `get_current_user`?
@@ -151,18 +185,18 @@ async def download_image(
         )
 
     # Stream file from S3
-    s3_image = await s3_client.get_object(
-        Bucket=lacof_settings.S3_BUCKET_NAME,
-        Key=image_orm.file_path,
+    s3_data_stream = await stream_image_data_from_s3(
+        s3_client=s3_client,
+        bucket_name=lacof_settings.S3_BUCKET_NAME,
+        key_name=image_orm.file_path,
     )
-    s3_stream = (chunk async for chunk in s3_image["Body"])
 
     headers = {
         "Content-Disposition": f'inline; filename="{image_orm.file_name}"',
     }
 
     return StreamingResponse(
-        content=s3_stream,
+        content=s3_data_stream,
         headers=headers,
         media_type=image_orm.content_type,
     )

@@ -11,7 +11,7 @@ import sys
 from sqlalchemy import exc
 
 from lacof.db import get_db_session
-from users.models import UserModel
+from lacof.models import UserModel
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
