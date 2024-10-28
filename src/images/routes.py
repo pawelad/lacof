@@ -12,6 +12,7 @@ from images.models import IMAGE_CONTENT_TYPES, ImageModel
 from images.schemas import Image
 from lacof.db import get_db_session
 from lacof.dependencies import get_s3_bucket
+from lacof.utils import API_ERROR_SCHEMA
 from users.auth import get_current_user
 from users.schemas import User
 
@@ -23,7 +24,11 @@ images_router = APIRouter(prefix="/images", tags=["images"])
 # TODO: Move logic to a separate (service?) file?
 
 
-@images_router.get("/")
+# TODO: Pagination?
+@images_router.get(
+    "/",
+    responses={200: {"description": "All available images"}},
+)
 async def list_images(
     session: Annotated[AsyncSession, Depends(get_db_session)],
     # TODO: Should auth be separate from `get_current_user`?
@@ -36,14 +41,21 @@ async def list_images(
     return images
 
 
-@images_router.post("/", status_code=status.HTTP_201_CREATED)
+@images_router.post(
+    "/",
+    status_code=status.HTTP_201_CREATED,
+    responses={201: {"description": "Image successfully created"}},
+)
 async def create_image(
     file: UploadFile,
     session: Annotated[AsyncSession, Depends(get_db_session)],
     user: Annotated[User, Depends(get_current_user)],
     s3_bucket: Annotated["Bucket", Depends(get_s3_bucket)],
 ) -> Image:
-    """Upload a new image."""
+    """Upload a new image.
+
+    Only JPG/JPEG and PNG files are allowed.
+    """
     # TODO: Try to check if the passed file is actually an image?
     try:
         image_orm = ImageModel(
@@ -73,7 +85,13 @@ async def create_image(
     return image
 
 
-@images_router.get("/{image_id}")
+@images_router.get(
+    "/{image_id}",
+    responses={
+        200: {"description": "Image requested by ID"},
+        404: {"description": "Image not found", "content": API_ERROR_SCHEMA},
+    },
+)
 async def get_image(
     image_id: Annotated[int, Path(title="Image ID")],
     session: Annotated[AsyncSession, Depends(get_db_session)],
@@ -96,16 +114,18 @@ async def get_image(
 
 # TODO: Streaming response?
 # TODO: OpenAPI schema (and docs) for `FileResponse` are incorrectly generated
-#   (see: https://github.com/fastapi/fastapi/discussions/9551. And when using
-#   base `Response`, it always marks "application/json" as valid content response
+#   (see: https://github.com/fastapi/fastapi/discussions/9551. And even when using
+#   base `Response`, it always marks "application/json" as valid content response...
 #   (see: https://github.com/fastapi/fastapi/discussions/6650).
 @images_router.get(
     "/{image_id}/download",
     response_model=None,
     responses={
         200: {
+            "description": "Requested image content",
             "content": {content_type: {} for content_type in IMAGE_CONTENT_TYPES},
-        }
+        },
+        404: {"description": "Image not found", "content": API_ERROR_SCHEMA},
     },
 )
 async def download_image(
@@ -145,6 +165,10 @@ async def download_image(
     "/{image_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     response_class=Response,
+    responses={
+        204: {"description": "Image successfully deleted"},
+        404: {"description": "Image not found", "content": API_ERROR_SCHEMA},
+    },
 )
 async def delete_image(
     image_id: Annotated[int, Path(title="Image ID")],
