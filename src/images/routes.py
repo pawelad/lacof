@@ -8,7 +8,7 @@ from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from images.models import ImageModel
+from images.models import IMAGE_CONTENT_TYPES, ImageModel
 from images.schemas import Image
 from lacof.db import get_db_session
 from lacof.dependencies import get_s3_bucket
@@ -44,12 +44,20 @@ async def create_image(
     s3_bucket: Annotated["Bucket", Depends(get_s3_bucket)],
 ) -> Image:
     """Upload a new image."""
-    image_orm = ImageModel(
-        user_id=user.id,
-        file_name=file.filename,
-        file_path=ImageModel.generate_file_path(file.filename),
-        content_type=file.content_type,
-    )
+    # TODO: Try to check if the passed file is actually an image?
+    try:
+        image_orm = ImageModel(
+            user_id=user.id,
+            file_name=file.filename,
+            file_path=ImageModel.generate_file_path(file.filename),
+            content_type=file.content_type,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e),
+        ) from e
+
     session.add(image_orm)
     await session.commit()
     await session.refresh(image_orm)
