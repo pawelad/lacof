@@ -93,7 +93,6 @@ async def get_image_data_from_s3(
     """
     bucket_name = bucket_name or lacof_settings.S3_BUCKET_NAME
 
-    # TODO: Error handling (`s3_client.exceptions.NoSuchKey`)?
     s3_image = await s3_client.get_object(
         Bucket=bucket_name,
         Key=image.s3_image_data_key,
@@ -121,7 +120,6 @@ async def stream_image_data_from_s3(
     """
     bucket_name = bucket_name or lacof_settings.S3_BUCKET_NAME
 
-    # TODO: Error handling (`s3_client.exceptions.NoSuchKey`)?
     s3_image = await s3_client.get_object(
         Bucket=bucket_name,
         Key=image.s3_image_data_key,
@@ -149,7 +147,6 @@ async def save_image_data_to_s3(
     """
     bucket_name = bucket_name or lacof_settings.S3_BUCKET_NAME
 
-    # TODO: Check for upload success?
     await s3_client.upload_fileobj(
         Fileobj=image_data,
         Bucket=bucket_name,

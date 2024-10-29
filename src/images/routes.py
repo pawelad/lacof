@@ -155,6 +155,7 @@ async def get_image(
             "content": {"image/*": {"schema": {"type": "string", "format": "binary"}}},
         },
         404: {"description": "Image not found", "content": API_ERROR_SCHEMA},
+        424: {"description": "Image missing from S3", "content": API_ERROR_SCHEMA},
     },
 )
 async def download_image(
@@ -177,10 +178,16 @@ async def download_image(
         )
 
     # Stream file from S3
-    s3_data_stream = await image_service.stream_image_data_from_s3(
-        s3_client=s3_client,
-        image=image_orm,
-    )
+    try:
+        s3_data_stream = await image_service.stream_image_data_from_s3(
+            s3_client=s3_client,
+            image=image_orm,
+        )
+    except s3_client.exceptions.NoSuchKey as e:
+        raise HTTPException(
+            status_code=status.HTTP_424_FAILED_DEPENDENCY,
+            detail="Image missing from S3",
+        ) from e
 
     headers = {
         "Content-Disposition": f'inline; filename="{image_orm.file_name}"',
@@ -216,15 +223,21 @@ async def get_similar_images(
             detail="Image not found",
         )
 
-    similar_images = await image_service.find_similar_images(
-        sql_session=sql_session,
-        s3_client=s3_client,
-        redis_client=redis_client,
-        clip_model=request.state.clip_model,
-        image=main_image_orm,
-        limit=limit,
-        threshold=threshold,
-    )
+    try:
+        similar_images = await image_service.find_similar_images(
+            sql_session=sql_session,
+            s3_client=s3_client,
+            redis_client=redis_client,
+            clip_model=request.state.clip_model,
+            image=main_image_orm,
+            limit=limit,
+            threshold=threshold,
+        )
+    except s3_client.exceptions.NoSuchKey as e:
+        raise HTTPException(
+            status_code=status.HTTP_424_FAILED_DEPENDENCY,
+            detail="Image(s) missing from S3",
+        ) from e
 
     response = ImageWithSimilarImages(
         image=main_image_orm,
