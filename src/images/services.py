@@ -1,5 +1,7 @@
 """Image related service code."""
 
+import asyncio
+import functools
 from collections.abc import AsyncGenerator
 from io import BytesIO
 from typing import TYPE_CHECKING
@@ -158,7 +160,7 @@ async def save_image_data_to_s3(
 # ML
 
 
-async def calculate_image_model_embeddings(
+def calculate_image_model_embeddings(
     *,
     model: SentenceTransformer,
     image_data: BytesIO,
@@ -172,7 +174,6 @@ async def calculate_image_model_embeddings(
     Returns:
         Image ML model embeddings.
     """
-    # TODO: Async?
     image_pil = Image.open(image_data)
     image_embeddings = model.encode(image_pil)  # type: ignore
     image_pil.close()
@@ -251,9 +252,16 @@ async def calculate_and_cache_image_clip_model_embeddings(
     Returns:
         Image ML model embeddings.
     """
-    image_embeddings = await calculate_image_model_embeddings(
-        model=clip_model,
-        image_data=image_data,
+    loop = asyncio.get_running_loop()
+
+    # TODO: Should we use `ProcessPoolExecutor`?
+    image_embeddings = await loop.run_in_executor(
+        executor=None,
+        func=functools.partial(
+            calculate_image_model_embeddings,
+            model=clip_model,
+            image_data=image_data,
+        ),
     )
 
     await set_cache_model_embeddings(
