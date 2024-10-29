@@ -12,6 +12,14 @@ ENV HOME="/home/$USER"
 ENV APP_DIR="$HOME/app"
 ENV VIRTUAL_ENV="$HOME/venv"
 
+# Install system dependencies
+RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+RUN --mount=type=cache,sharing=locked,target=/var/lib/apt/lists \
+    --mount=type=cache,sharing=locked,target=/var/cache/apt \
+    apt-get update \
+    && apt-get --no-install-recommends install -y \
+      make
+
 # Create a non root user
 RUN groupadd --gid ${GID} $USER \
     && useradd --system --create-home --no-log-init \

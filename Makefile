@@ -25,7 +25,7 @@ pip-compile: ## Compile requirements files
 	@$(PIP_COMPILE) --output-file requirements/constraints.txt requirements/main.txt requirements/dev.txt
 
 .PHONY: upgrade-package
-upgrade-package: ## Upgrade Python package (pass "package=<PACKAGE_NAME>")
+upgrade-package: ## Upgrade a Python package (pass "package=<PACKAGE_NAME>")
 	@$(PIP_COMPILE) --generate-hashes --upgrade-package $(package) requirements/main.in
 	@$(PIP_COMPILE) --generate-hashes --upgrade-package $(package) requirements/dev.in
 	@$(PIP_COMPILE) --output-file requirements/constraints.txt requirements/main.txt requirements/dev.txt
@@ -41,7 +41,7 @@ run: ## Run the app
 	uvicorn --app-dir=src --reload lacof.app:application
 
 .PHONY: create-migration
-create-migration: ## Create Alembic migration (pass "name=<MIGRATION_NAME>")
+create-migration: ## Create an Alembic migration (pass "name=<MIGRATION_NAME>")
 	alembic revision --autogenerate -m "$(name)"
 
 .PHONY: apply-migrations
@@ -65,10 +65,6 @@ docker-build: ## Build Docker compose stack
 .PHONY: docker-run
 docker-run: ## Run Docker compose stack
 	docker compose up app
-
-.PHONY: docker-run-minio
-docker-run-minio: ## Run MinIO with Docker
-	docker compose up minio
 
 .PHONY: docker-stop
 docker-stop: ## Stop Docker compose stack
