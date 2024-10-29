@@ -7,7 +7,6 @@ from typing import TypedDict
 import redis.asyncio as redis
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse, Response
-from fastapi.staticfiles import StaticFiles
 from sentence_transformers import SentenceTransformer
 
 from lacof import __title__, __version__
@@ -65,9 +64,6 @@ async def root() -> Response:
     """Redirect user to API docs."""
     return RedirectResponse("/api/v1/docs")
 
-
-# Static files
-application.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Sentry
 if lacof_settings.SENTRY_DSN:
