@@ -16,19 +16,13 @@ from fastapi import (
     status,
 )
 from fastapi.responses import Response, StreamingResponse
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from images import services as image_service
 from images.models import ImageModel
 from images.schemas import Image, ImageWithSimilarImages
-from images.services import (
-    calculate_and_set_cache_image_model_embeddings,
-    find_similar_images,
-    stream_image_data_from_s3,
-)
 from lacof.db import get_db_session
 from lacof.dependencies import get_redis_client, get_s3_client
-from lacof.settings import lacof_settings
 from lacof.utils import API_ERROR_SCHEMA
 from users.auth import get_current_user
 from users.schemas import User
@@ -38,23 +32,21 @@ if TYPE_CHECKING:
 
 images_router = APIRouter(prefix="/images", tags=["images"])
 
-# TODO: Move logic to a separate (service?) file?
 
-
-# TODO: Pagination?
 @images_router.get(
     "/",
     responses={200: {"description": "All available images"}},
 )
 async def list_images(
-    session: Annotated[AsyncSession, Depends(get_db_session)],
+    sql_session: Annotated[AsyncSession, Depends(get_db_session)],
     # TODO: Should auth be separate from `get_current_user`?
     user: Annotated[User, Depends(get_current_user)],
 ) -> list[Image]:
-    """List all images."""
-    stmt = select(ImageModel)
-    images_orm = await session.scalars(stmt)
+    """List all available images."""
+    # TODO: Pagination?
+    images_orm = await image_service.get_images_from_db(sql_session=sql_session)
     images = [Image.model_validate(image_orm) for image_orm in images_orm]
+
     return images
 
 
@@ -67,7 +59,7 @@ async def create_image(
     request: Request,
     file: UploadFile,
     background_tasks: BackgroundTasks,
-    session: Annotated[AsyncSession, Depends(get_db_session)],
+    sql_session: Annotated[AsyncSession, Depends(get_db_session)],
     user: Annotated[User, Depends(get_current_user)],
     s3_client: Annotated["S3Client", Depends(get_s3_client)],
     redis_client: Annotated[redis.Redis, Depends(get_redis_client)],
@@ -90,33 +82,30 @@ async def create_image(
             detail=str(e),
         ) from e
 
-    session.add(image_orm)
-    await session.commit()
-    await session.refresh(image_orm)
+    await image_service.save_image_to_db(sql_session=sql_session, image=image_orm)
 
     # If it was only S3, we could 'stream' it, but because we also need it for the
     # background task, we might as well load it into memory straight away.
     image_data = BytesIO(await file.read())
 
     # Upload file to S3
-    await s3_client.upload_fileobj(
-        Fileobj=image_data,
-        Bucket=lacof_settings.S3_BUCKET_NAME,
-        Key=image_orm.file_path,
-        ExtraArgs={"ContentType": image_orm.content_type},
-    )
-    # TODO: Check for upload success?
-
-    # Generate and cache Clip model embeddings
-    background_tasks.add_task(
-        calculate_and_set_cache_image_model_embeddings,
-        model=request.state.clip_model,
+    await image_service.save_image_data_to_s3(
+        s3_client=s3_client,
+        image=image_orm,
         image_data=image_data,
+    )
+
+    # Generate and cache Clip model embeddings as a background task
+    background_tasks.add_task(
+        image_service.calculate_and_cache_image_clip_model_embeddings,
         redis_client=redis_client,
-        key_name=image_orm.clip_embeddings_cache_key,
+        clip_model=request.state.clip_model,
+        image_data=image_data,
+        cache_key=image_orm.cache_clip_embeddings_key,
     )
 
     image = Image.model_validate(image_orm)
+
     return image
 
 
@@ -129,14 +118,15 @@ async def create_image(
 )
 async def get_image(
     image_id: Annotated[int, Path(title="Image ID")],
-    session: Annotated[AsyncSession, Depends(get_db_session)],
+    sql_session: Annotated[AsyncSession, Depends(get_db_session)],
     # TODO: Should auth be separate from `get_current_user`?
     user: Annotated[User, Depends(get_current_user)],
 ) -> Image:
     """Get image details."""
-    stmt = select(ImageModel).where(ImageModel.id == image_id)
-    image_orm = await session.scalar(stmt)
-
+    image_orm = await image_service.get_image_from_db(
+        sql_session=sql_session,
+        image_id=image_id,
+    )
     if not image_orm:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -144,6 +134,7 @@ async def get_image(
         )
 
     image = Image.model_validate(image_orm)
+
     return image
 
 
@@ -169,15 +160,16 @@ async def get_image(
 async def download_image(
     request: Request,
     image_id: Annotated[int, Path(title="Image ID")],
-    session: Annotated[AsyncSession, Depends(get_db_session)],
+    sql_session: Annotated[AsyncSession, Depends(get_db_session)],
     # TODO: Should auth be separate from `get_current_user`?
     user: Annotated[User, Depends(get_current_user)],
     s3_client: Annotated["S3Client", Depends(get_s3_client)],
 ) -> StreamingResponse:
     """Download an image."""
-    stmt = select(ImageModel).where(ImageModel.id == image_id)
-    image_orm = await session.scalar(stmt)
-
+    image_orm = await image_service.get_image_from_db(
+        sql_session=sql_session,
+        image_id=image_id,
+    )
     if not image_orm:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -185,10 +177,9 @@ async def download_image(
         )
 
     # Stream file from S3
-    s3_data_stream = await stream_image_data_from_s3(
+    s3_data_stream = await image_service.stream_image_data_from_s3(
         s3_client=s3_client,
-        bucket_name=lacof_settings.S3_BUCKET_NAME,
-        key_name=image_orm.file_path,
+        image=image_orm,
     )
 
     headers = {
@@ -206,7 +197,7 @@ async def download_image(
 async def get_similar_images(
     request: Request,
     image_id: Annotated[int, Path(title="Image ID")],
-    session: Annotated[AsyncSession, Depends(get_db_session)],
+    sql_session: Annotated[AsyncSession, Depends(get_db_session)],
     # TODO: Should auth be separate from `get_current_user`?
     user: Annotated[User, Depends(get_current_user)],
     s3_client: Annotated["S3Client", Depends(get_s3_client)],
@@ -215,22 +206,22 @@ async def get_similar_images(
     threshold: Annotated[float, Query(title="Similarity threshold")] = 0.8,
 ) -> ImageWithSimilarImages:
     """Find similar images among other uploaded ones."""
-    stmt = select(ImageModel).where(ImageModel.id == image_id)
-    main_image_orm = await session.scalar(stmt)
-
+    main_image_orm = await image_service.get_image_from_db(
+        sql_session=sql_session,
+        image_id=image_id,
+    )
     if not main_image_orm:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Image not found",
         )
 
-    similar_images = await find_similar_images(
-        model=request.state.clip_model,
-        image=main_image_orm,
-        sql_session=session,
-        redis_client=redis_client,
+    similar_images = await image_service.find_similar_images(
+        sql_session=sql_session,
         s3_client=s3_client,
-        bucket_name=lacof_settings.S3_BUCKET_NAME,
+        redis_client=redis_client,
+        clip_model=request.state.clip_model,
+        image=main_image_orm,
         limit=limit,
         threshold=threshold,
     )
@@ -254,19 +245,20 @@ async def get_similar_images(
 )
 async def delete_image(
     image_id: Annotated[int, Path(title="Image ID")],
-    session: Annotated[AsyncSession, Depends(get_db_session)],
+    sql_session: Annotated[AsyncSession, Depends(get_db_session)],
     # TODO: Should auth be separate from `get_current_user`?
     user: Annotated[User, Depends(get_current_user)],
 ) -> None:
     """Delete image."""
-    stmt = select(ImageModel).where(ImageModel.id == image_id)
-    image_orm = await session.scalar(stmt)
-
+    image_orm = await image_service.get_image_from_db(
+        sql_session=sql_session,
+        image_id=image_id,
+    )
     if not image_orm:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Image not found",
         )
 
-    await session.delete(image_orm)
-    await session.commit()
+    await sql_session.delete(image_orm)
+    await sql_session.commit()

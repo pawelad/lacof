@@ -31,10 +31,14 @@ class ImageModel(BaseSQLModel):
     content_type: Mapped[str] = mapped_column(String(128))
 
     @property
-    def clip_embeddings_cache_key(self) -> str:
-        """TODO: Docstrings."""
-        key_name = f"{self.__tablename__}:{self.id}:clip_embeddings"
-        return key_name
+    def s3_image_data_key(self) -> str:
+        """Return S3 key for image file data storage."""
+        return self.file_path
+
+    @property
+    def cache_clip_embeddings_key(self) -> str:
+        """Return cache key for image Clip embeddings."""
+        return f"{self.__tablename__}:{self.id}:clip_embeddings"
 
     @classmethod
     def generate_file_path(cls, file_name: str | None) -> str:
