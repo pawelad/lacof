@@ -1,8 +1,9 @@
 """Image schemas."""
 
 from pathlib import Path
+from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import AfterValidator, BaseModel, ConfigDict
 
 
 class Image(BaseModel):
@@ -23,3 +24,31 @@ class Image(BaseModel):
     file_name: str
     file_path: Path
     content_type: str
+
+
+class SimilarImage(BaseModel):
+    """Similar image schema.
+
+    Attributes:
+        image_id: Image ID.
+        similarity: ID of the user that uploaded the image.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    image_id: int
+    similarity: Annotated[float, AfterValidator(lambda v: round(v, 5))]
+
+
+class ImageWithSimilarImages(BaseModel):
+    """Image with listed similar images schema.
+
+    Attributes:
+        image: Image.
+        similar_images: List of similar images.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    image: Image
+    similar_images: list[SimilarImage]

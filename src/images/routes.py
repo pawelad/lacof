@@ -10,20 +10,20 @@ from fastapi import (
     Depends,
     HTTPException,
     Path,
+    Query,
     Request,
     UploadFile,
     status,
 )
 from fastapi.responses import Response, StreamingResponse
-from sentence_transformers.util import semantic_search
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from images.models import ImageModel
-from images.schemas import Image
+from images.schemas import Image, ImageWithSimilarImages
 from images.services import (
     calculate_and_set_cache_image_model_embeddings,
-    get_image_model_embeddings,
+    find_similar_images,
     stream_image_data_from_s3,
 )
 from lacof.db import get_db_session
@@ -200,6 +200,47 @@ async def download_image(
         headers=headers,
         media_type=image_orm.content_type,
     )
+
+
+@images_router.get("/{image_id}/similar")
+async def get_similar_images(
+    request: Request,
+    image_id: Annotated[int, Path(title="Image ID")],
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+    # TODO: Should auth be separate from `get_current_user`?
+    user: Annotated[User, Depends(get_current_user)],
+    s3_client: Annotated["S3Client", Depends(get_s3_client)],
+    redis_client: Annotated[redis.Redis, Depends(get_redis_client)],
+    limit: Annotated[int, Query(title="Number of similar images to show")] = 10,
+    threshold: Annotated[float, Query(title="Similarity threshold")] = 0.8,
+) -> ImageWithSimilarImages:
+    """Find similar images among other uploaded ones."""
+    stmt = select(ImageModel).where(ImageModel.id == image_id)
+    main_image_orm = await session.scalar(stmt)
+
+    if not main_image_orm:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Image not found",
+        )
+
+    similar_images = await find_similar_images(
+        model=request.state.clip_model,
+        image=main_image_orm,
+        sql_session=session,
+        redis_client=redis_client,
+        s3_client=s3_client,
+        bucket_name=lacof_settings.S3_BUCKET_NAME,
+        limit=limit,
+        threshold=threshold,
+    )
+
+    response = ImageWithSimilarImages(
+        image=main_image_orm,
+        similar_images=similar_images,
+    )
+
+    return response
 
 
 @images_router.delete(

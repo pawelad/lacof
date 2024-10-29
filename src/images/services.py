@@ -10,8 +10,12 @@ import numpy
 import redis.asyncio as redis
 from PIL import Image
 from sentence_transformers import SentenceTransformer
+from sentence_transformers.util import _convert_to_tensor, semantic_search
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from images.models import ImageModel
+from images.schemas import SimilarImage
 
 if TYPE_CHECKING:
     from types_aiobotocore_s3 import S3Client
@@ -156,3 +160,67 @@ async def get_image_model_embeddings(
         )
 
     return image_embeddings
+
+
+async def find_similar_images(
+    *,
+    model: SentenceTransformer,
+    image: ImageModel,
+    sql_session: AsyncSession,
+    redis_client: redis.Redis,
+    # TODO: Should this be optional?
+    s3_client: "S3Client",
+    bucket_name: str,
+    limit: int = 10,
+    threshold: float | None = None,
+) -> list[SimilarImage]:
+    """TODO: Docstrings."""
+    # Main image embeddings
+    query_embeddings = await get_image_model_embeddings(
+        model=model,
+        image=image,
+        redis_client=redis_client,
+        s3_client=s3_client,
+        bucket_name=bucket_name,
+    )
+
+    # Get all other images
+    stmt = select(ImageModel).where(ImageModel.id != image.id)
+    other_images_orm = await sql_session.scalars(stmt)
+
+    # Get embeddings for those images
+    corpus_embeddings_image_ids = []
+    corpus_embeddings = []
+    for image_orm in other_images_orm:
+        image_embeddings = await get_image_model_embeddings(
+            model=model,
+            image=image_orm,
+            redis_client=redis_client,
+            s3_client=s3_client,
+            bucket_name=bucket_name,
+        )
+
+        corpus_embeddings_image_ids.append(image_orm.id)
+        corpus_embeddings.append(_convert_to_tensor(image_embeddings))
+
+    # TODO: Cache this too?
+    # Find best matches
+    matches = semantic_search(
+        query_embeddings=query_embeddings,  # type: ignore
+        corpus_embeddings=corpus_embeddings,  # type: ignore
+        top_k=limit,
+    )[0]
+
+    similar_images = []
+    for match in matches:
+        corpus_id, similarity = match["corpus_id"], match["score"]
+        assert isinstance(corpus_id, int)  # For mypy
+
+        if threshold and similarity < threshold:
+            continue
+
+        image_id = corpus_embeddings_image_ids[corpus_id]
+        similar_image = SimilarImage(image_id=image_id, similarity=similarity)
+        similar_images.append(similar_image)
+
+    return similar_images
