@@ -108,6 +108,10 @@ S3_BUCKET_NAME='lacof'
 # Clip ML model name
 # Avaible options: https://www.sbert.net/docs/sentence_transformer/pretrained_models.html#image-text-models
 CLIP_MODEL_NAME='clip-ViT-B-32'
+
+# Sentry DSN
+# Docs: https://docs.sentry.io/platforms/python/configuration/options/
+SENTRY_DSN='https://***@sentry.io/***'
 ```
 
 ## Makefile

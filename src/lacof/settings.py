@@ -7,7 +7,20 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class LacofSettings(BaseSettings):
-    """Lacof app settings."""
+    """Lacof app settings.
+
+    Attributes:
+        ENVIRONMENT: App environment. Can be one either "local" or "production".
+        DEBUG: Whether the app is running in debug mode.
+        DATABASE_URL: Database URL.
+        REDIS_URL: Redis URL.
+        AWS_ACCESS_KEY_ID: AWS access key ID.
+        AWS_SECRET_ACCESS_KEY: AWS secret access key.
+        S3_ENDPOINT_URL: S3 endpoint URL. Needed for using MinIO instead of S3.
+        S3_BUCKET_NAME: S3 bucket name
+        CLIP_MODEL_NAME: Clip ML model name.
+        SENTRY_DSN: Sentry DSN for its integration. Disabled by default.
+    """
 
     model_config = SettingsConfigDict(
         case_sensitive=True,
@@ -31,6 +44,9 @@ class LacofSettings(BaseSettings):
 
     # ML
     CLIP_MODEL_NAME: str = "clip-ViT-B-32"
+
+    # Misc
+    SENTRY_DSN: HttpUrl | None = None
 
 
 lacof_settings = LacofSettings()

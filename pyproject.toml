@@ -21,6 +21,7 @@ plugins = [
 module = [
   "msgpack",
   "msgpack_numpy",
+  "sentry_sdk",
 ]
 ignore_missing_imports = true
 

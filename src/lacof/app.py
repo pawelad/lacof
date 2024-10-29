@@ -68,3 +68,13 @@ async def root() -> Response:
 
 # Static files
 application.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Sentry
+if lacof_settings.SENTRY_DSN:
+    import sentry_sdk
+
+    sentry_sdk.init(
+        dsn=str(lacof_settings.SENTRY_DSN),
+        traces_sample_rate=1.0,
+        profiles_sample_rate=0.5,
+    )

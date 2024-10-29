@@ -21,3 +21,6 @@ sentence-transformers
 gunicorn
 uvicorn
 uvloop
+
+# Misc
+sentry-sdk[fastapi]
