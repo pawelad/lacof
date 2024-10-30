@@ -7,7 +7,7 @@ from fastapi.security import APIKeyHeader
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lacof.db import get_db_session
+from lacof.dependencies import get_db_session
 from lacof.models import UserModel
 from users.schemas import User
 

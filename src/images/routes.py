@@ -21,8 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from images import services as image_service
 from images.models import ImageModel
 from images.schemas import Image, ImageWithSimilarImages
-from lacof.db import get_db_session
-from lacof.dependencies import get_redis_client, get_s3_client
+from lacof.dependencies import get_db_session, get_redis_client, get_s3_client
 from lacof.utils import API_ERROR_SCHEMA
 from users.auth import get_current_user
 from users.schemas import User

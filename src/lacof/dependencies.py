@@ -6,11 +6,32 @@ from typing import TYPE_CHECKING
 import aioboto3
 import redis.asyncio as redis
 from fastapi import Request
+from sqlalchemy import exc
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from lacof.settings import lacof_settings
 
 if TYPE_CHECKING:
     from types_aiobotocore_s3 import S3Client
+
+
+async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+    """Get async SQLAlchemy database session.
+
+    Meant to be used as a FastAPI dependency.
+
+    Source:
+        https://chaoticengineer.hashnode.dev/fastapi-sqlalchemy#heading-session-handler
+    """
+    engine = create_async_engine(str(lacof_settings.DATABASE_URL))
+    factory = async_sessionmaker(engine)
+    async with factory() as session:
+        try:
+            yield session
+            await session.commit()
+        except exc.SQLAlchemyError:
+            await session.rollback()
+            raise
 
 
 async def get_s3_client(request: Request) -> AsyncGenerator["S3Client", None]:
