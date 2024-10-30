@@ -1,5 +1,7 @@
 """Lacof app utils."""
 
+from collections.abc import AsyncGenerator, Callable
+
 from fastapi.openapi.constants import REF_PREFIX
 from pydantic import BaseModel
 
@@ -25,3 +27,27 @@ class APIInfo(BaseModel):
     version: str
     environment: str
     user: str
+
+
+# TODO: Remove when https://github.com/psf/black/issues/4254 is fixed
+# fmt: off
+async def resolve_fastapi_dependency[T](
+    dependency: Callable[[], AsyncGenerator[T, None]],
+) -> T:
+    """Resolve a FastAPI dependency function that returns an async generator.
+
+    Apparently, there's no better way:
+    - https://github.com/fastapi/fastapi/discussions/7720
+    - https://stackoverflow.com/a/75152604/3023841
+
+    Arguments:
+        dependency: FastAPI dependency function.
+
+    Returns:
+        Value that the generator yields.
+    """
+    async_gen = dependency()
+    result = await anext(async_gen)
+
+    return result
+# fmt: on

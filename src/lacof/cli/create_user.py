@@ -12,6 +12,7 @@ from sqlalchemy import exc
 
 from lacof.db import get_db_session
 from lacof.models import UserModel
+from lacof.utils import resolve_fastapi_dependency
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -24,13 +25,9 @@ async def create_user(username: str) -> None:
     User API key is generated automatically on save.
 
     Arguments:
-        username: New user's username.
+        username: New user's name.
     """
-    # TODO: There has to be a better way...
-    #  https://stackoverflow.com/a/75152604/3023841
-    #  https://github.com/fastapi/fastapi/discussions/7720
-    session_generator = get_db_session()
-    session = await anext(session_generator)
+    session = await resolve_fastapi_dependency(get_db_session)
 
     user = UserModel(name=username)
     session.add(user)
@@ -43,6 +40,8 @@ async def create_user(username: str) -> None:
         logger.info(
             f"Successfully created user '{user.name}' with API key '{user.api_key}'"
         )
+
+    await session.close()
 
 
 if __name__ == "__main__":
