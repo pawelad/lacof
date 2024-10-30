@@ -77,7 +77,7 @@ Available settings:
 
 ```
 # App environment
-# Can be set to one of: "local" or "production"
+# Can be set to one of: 'production', 'local' or 'test'
 ENVIRONMENT='local'
 
 # Run app in debug mode (tracebacks are returned on errors)
@@ -87,6 +87,10 @@ DEBUG=True
 # Database URL
 # Docs: https://docs.sqlalchemy.org/en/20/core/engines.html#database-urls
 DATABASE_URL='postgresql+asyncpg://postgres@localhost/lacof'
+
+# Test database URL
+# Docs: https://docs.sqlalchemy.org/en/20/core/engines.html#database-urls
+DATABASE_URL='postgresql+asyncpg://postgres@localhost/lacof-test'
 
 # Redis URL
 # Docs: https://redis.readthedocs.io/en/stable/examples/connection_examples.html#Connecting-to-Redis-instances-by-specifying-a-URL-scheme.

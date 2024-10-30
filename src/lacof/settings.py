@@ -10,9 +10,10 @@ class LacofSettings(BaseSettings):
     """Lacof app settings.
 
     Attributes:
-        ENVIRONMENT: App environment. Can be one either "local" or "production".
+        ENVIRONMENT: App environment. Can be one of 'local', 'production' or 'test'.
         DEBUG: Whether the app is running in debug mode.
         DATABASE_URL: Database URL.
+        TEST_DATABASE_URL: Test database URL.
         REDIS_URL: Redis URL.
         AWS_ACCESS_KEY_ID: AWS access key ID.
         AWS_SECRET_ACCESS_KEY: AWS secret access key.
@@ -28,11 +29,14 @@ class LacofSettings(BaseSettings):
         env_file_encoding="utf-8",
     )
 
-    ENVIRONMENT: Literal["local", "production"] = "local"
+    ENVIRONMENT: Literal["production", "local", "test"] = "local"
     DEBUG: bool = False
 
     DATABASE_URL: PostgresDsn = PostgresDsn(
         "postgresql+asyncpg://postgres@localhost/lacof"
+    )
+    TEST_DATABASE_URL: PostgresDsn = PostgresDsn(
+        "postgresql+asyncpg://postgres@localhost/lacof-test"
     )
     REDIS_URL: RedisDsn = RedisDsn("redis://localhost:6379/0")
 
