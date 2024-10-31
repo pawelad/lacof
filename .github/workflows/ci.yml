@@ -21,7 +21,9 @@ env:
 jobs:
   tests:
     name: "Tests"
-    runs-on: "ubuntu-latest"
+    # Workaround for `sentence-transformers` failing because requirements were
+    # generated on macOS. See https://github.com/jazzband/pip-tools/issues/585
+    runs-on: "macos-latest"
     services:
       db:
         image: "postgres:16.4"
