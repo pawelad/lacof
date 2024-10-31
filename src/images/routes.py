@@ -34,7 +34,7 @@ images_router = APIRouter(prefix="/images", tags=["images"])
 
 @images_router.get(
     "/",
-    responses={200: {"description": "All available images"}},
+    responses={status.HTTP_200_OK: {"description": "All available images"}},
 )
 async def list_images(
     sql_session: Annotated[AsyncSession, Depends(get_db_session)],
@@ -52,7 +52,7 @@ async def list_images(
 @images_router.post(
     "/",
     status_code=status.HTTP_201_CREATED,
-    responses={201: {"description": "Image successfully created"}},
+    responses={status.HTTP_201_CREATED: {"description": "Image successfully created"}},
 )
 async def create_image(
     request: Request,
@@ -111,8 +111,11 @@ async def create_image(
 @images_router.get(
     "/{image_id}",
     responses={
-        200: {"description": "Image requested by ID"},
-        404: {"description": "Image not found", "content": API_ERROR_SCHEMA},
+        status.HTTP_200_OK: {"description": "Image requested by ID"},
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Image not found",
+            "content": API_ERROR_SCHEMA,
+        },
     },
 )
 async def get_image(
@@ -143,7 +146,7 @@ async def get_image(
     # are incorrect (see: https://github.com/fastapi/fastapi/discussions/3881).
     response_class=StreamingResponse,
     responses={
-        200: {
+        status.HTTP_200_OK: {
             "description": "Requested image content",
             "headers": {
                 "Transfer-Encoding": {
@@ -153,8 +156,14 @@ async def get_image(
             },
             "content": {"image/*": {"schema": {"type": "string", "format": "binary"}}},
         },
-        404: {"description": "Image not found", "content": API_ERROR_SCHEMA},
-        424: {"description": "Image missing from S3", "content": API_ERROR_SCHEMA},
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Image not found",
+            "content": API_ERROR_SCHEMA,
+        },
+        status.HTTP_424_FAILED_DEPENDENCY: {
+            "description": "Image missing from S3",
+            "content": API_ERROR_SCHEMA,
+        },
     },
 )
 async def download_image(
@@ -251,8 +260,11 @@ async def get_similar_images(
     status_code=status.HTTP_204_NO_CONTENT,
     response_class=Response,
     responses={
-        204: {"description": "Image successfully deleted"},
-        404: {"description": "Image not found", "content": API_ERROR_SCHEMA},
+        status.HTTP_204_NO_CONTENT: {"description": "Image successfully deleted"},
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Image not found",
+            "content": API_ERROR_SCHEMA,
+        },
     },
 )
 async def delete_image(
