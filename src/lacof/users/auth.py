@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from lacof.dependencies import get_db_session
 from lacof.models import UserModel
-from users.schemas import User
+from lacof.users.schemas import User
 
 api_key_header = APIKeyHeader(name="X-API-Key")
 

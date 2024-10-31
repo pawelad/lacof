@@ -4,12 +4,12 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from images.routes import images_router
 from lacof import __version__
+from lacof.images.routes import images_router
 from lacof.settings import lacof_settings
+from lacof.users.auth import get_current_user
+from lacof.users.schemas import User
 from lacof.utils import APIInfo
-from users.auth import get_current_user
-from users.schemas import User
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(images_router)

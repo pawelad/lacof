@@ -16,8 +16,8 @@ from sentence_transformers.util import _convert_to_tensor, semantic_search
 from sqlalchemy import ScalarResult, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from images.models import ImageModel
-from images.schemas import SimilarImage
+from lacof.images.models import ImageModel
+from lacof.images.schemas import SimilarImage
 from lacof.settings import lacof_settings
 
 if TYPE_CHECKING:

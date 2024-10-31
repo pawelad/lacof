@@ -11,8 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from lacof.db import BaseSQLModel
 from lacof.settings import lacof_settings
-from users.auth import api_key_header
-from users.models import UserModel
+from lacof.users.auth import api_key_header
+from lacof.users.models import UserModel
 
 # TODO: Fixtures scopes?
 

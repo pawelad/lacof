@@ -18,13 +18,13 @@ from fastapi import (
 from fastapi.responses import Response, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from images import services as image_service
-from images.models import ImageModel
-from images.schemas import Image, ImageWithSimilarImages
 from lacof.dependencies import get_db_session, get_redis_client, get_s3_client
+from lacof.images import services as image_service
+from lacof.images.models import ImageModel
+from lacof.images.schemas import Image, ImageWithSimilarImages
+from lacof.users.auth import get_current_user
+from lacof.users.schemas import User
 from lacof.utils import API_ERROR_SCHEMA
-from users.auth import get_current_user
-from users.schemas import User
 
 if TYPE_CHECKING:
     from types_aiobotocore_s3 import S3Client

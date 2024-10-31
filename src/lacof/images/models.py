@@ -10,7 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 from lacof.db import BaseSQLModel
 
 if TYPE_CHECKING:
-    from users.models import UserModel
+    from lacof.users.models import UserModel
 
 
 IMAGE_CONTENT_TYPES = (

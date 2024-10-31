@@ -3,6 +3,6 @@
 Models imported here will have migrations automatically handled by `alembic`.
 """
 
-from images.models import ImageModel  # noqa
 from lacof.db import BaseSQLModel  # noqa
-from users.models import UserModel  # noqa
+from lacof.images.models import ImageModel  # noqa
+from lacof.users.models import UserModel  # noqa

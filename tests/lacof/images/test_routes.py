@@ -6,10 +6,10 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from images.models import ImageModel
-from images.schemas import Image
-from images.services import save_image_to_db
-from users.models import UserModel
+from lacof.images.models import ImageModel
+from lacof.images.schemas import Image
+from lacof.images.services import save_image_to_db
+from lacof.users.models import UserModel
 
 # TODO: Test model factories?
 
