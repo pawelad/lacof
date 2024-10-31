@@ -37,13 +37,13 @@ images_router = APIRouter(prefix="/images", tags=["images"])
     responses={status.HTTP_200_OK: {"description": "All available images"}},
 )
 async def list_images(
-    sql_session: Annotated[AsyncSession, Depends(get_db_session)],
+    db_session: Annotated[AsyncSession, Depends(get_db_session)],
     # TODO: Should auth be separate from `get_current_user`?
     user: Annotated[User, Depends(get_current_user)],
 ) -> list[Image]:
     """List all available images."""
     # TODO: Pagination?
-    images_orm = await image_service.get_images_from_db(sql_session=sql_session)
+    images_orm = await image_service.get_images_from_db(db_session=db_session)
     images = [Image.model_validate(image_orm) for image_orm in images_orm]
 
     return images
@@ -58,7 +58,7 @@ async def create_image(
     request: Request,
     file: UploadFile,
     background_tasks: BackgroundTasks,
-    sql_session: Annotated[AsyncSession, Depends(get_db_session)],
+    db_session: Annotated[AsyncSession, Depends(get_db_session)],
     user: Annotated[User, Depends(get_current_user)],
     s3_client: Annotated["S3Client", Depends(get_s3_client)],
     redis_client: Annotated[redis.Redis, Depends(get_redis_client)],
@@ -81,7 +81,7 @@ async def create_image(
             detail=str(e),
         ) from e
 
-    await image_service.save_image_to_db(sql_session=sql_session, image=image_orm)
+    await image_service.save_image_to_db(db_session=db_session, image=image_orm)
 
     # If it was only S3, we could 'stream' it, but because we also need it for the
     # background task, we might as well load it into memory straight away.
@@ -120,13 +120,13 @@ async def create_image(
 )
 async def get_image(
     image_id: Annotated[int, Path(title="Image ID")],
-    sql_session: Annotated[AsyncSession, Depends(get_db_session)],
+    db_session: Annotated[AsyncSession, Depends(get_db_session)],
     # TODO: Should auth be separate from `get_current_user`?
     user: Annotated[User, Depends(get_current_user)],
 ) -> Image:
     """Get image details."""
     image_orm = await image_service.get_image_from_db(
-        sql_session=sql_session,
+        db_session=db_session,
         image_id=image_id,
     )
     if not image_orm:
@@ -169,14 +169,14 @@ async def get_image(
 async def download_image(
     request: Request,
     image_id: Annotated[int, Path(title="Image ID")],
-    sql_session: Annotated[AsyncSession, Depends(get_db_session)],
+    db_session: Annotated[AsyncSession, Depends(get_db_session)],
     # TODO: Should auth be separate from `get_current_user`?
     user: Annotated[User, Depends(get_current_user)],
     s3_client: Annotated["S3Client", Depends(get_s3_client)],
 ) -> StreamingResponse:
     """Download an image."""
     image_orm = await image_service.get_image_from_db(
-        sql_session=sql_session,
+        db_session=db_session,
         image_id=image_id,
     )
     if not image_orm:
@@ -212,7 +212,7 @@ async def download_image(
 async def get_similar_images(
     request: Request,
     image_id: Annotated[int, Path(title="Image ID")],
-    sql_session: Annotated[AsyncSession, Depends(get_db_session)],
+    db_session: Annotated[AsyncSession, Depends(get_db_session)],
     # TODO: Should auth be separate from `get_current_user`?
     user: Annotated[User, Depends(get_current_user)],
     s3_client: Annotated["S3Client", Depends(get_s3_client)],
@@ -222,7 +222,7 @@ async def get_similar_images(
 ) -> ImageWithSimilarImages:
     """Find similar images among other uploaded ones."""
     main_image_orm = await image_service.get_image_from_db(
-        sql_session=sql_session,
+        db_session=db_session,
         image_id=image_id,
     )
     if not main_image_orm:
@@ -233,7 +233,7 @@ async def get_similar_images(
 
     try:
         similar_images = await image_service.find_similar_images(
-            sql_session=sql_session,
+            db_session=db_session,
             s3_client=s3_client,
             redis_client=redis_client,
             clip_model=request.state.clip_model,
@@ -269,13 +269,13 @@ async def get_similar_images(
 )
 async def delete_image(
     image_id: Annotated[int, Path(title="Image ID")],
-    sql_session: Annotated[AsyncSession, Depends(get_db_session)],
+    db_session: Annotated[AsyncSession, Depends(get_db_session)],
     # TODO: Should auth be separate from `get_current_user`?
     user: Annotated[User, Depends(get_current_user)],
 ) -> None:
     """Delete image."""
     image_orm = await image_service.get_image_from_db(
-        sql_session=sql_session,
+        db_session=db_session,
         image_id=image_id,
     )
     if not image_orm:
@@ -284,5 +284,5 @@ async def delete_image(
             detail="Image not found",
         )
 
-    await sql_session.delete(image_orm)
-    await sql_session.commit()
+    await db_session.delete(image_orm)
+    await db_session.commit()

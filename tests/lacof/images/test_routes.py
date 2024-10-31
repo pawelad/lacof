@@ -44,8 +44,8 @@ async def test_list_images(
         file_path=ImageModel.generate_file_path("test_filename"),
         content_type="image/jpeg",
     )
-    await save_image_to_db(sql_session=db_session, image=image1)
-    await save_image_to_db(sql_session=db_session, image=image2)
+    await save_image_to_db(db_session=db_session, image=image1)
+    await save_image_to_db(db_session=db_session, image=image2)
 
     response = await test_client.get(endpoint_url, headers=auth_header)
     data = response.json()
@@ -84,7 +84,7 @@ async def test_get_image(
         file_path=ImageModel.generate_file_path("test_filename"),
         content_type="image/jpeg",
     )
-    await save_image_to_db(sql_session=db_session, image=image)
+    await save_image_to_db(db_session=db_session, image=image)
 
     response = await test_client.get(endpoint_url, headers=auth_header)
     data = response.json()
@@ -122,7 +122,7 @@ async def test_delete_image(
         file_path=ImageModel.generate_file_path("test_filename"),
         content_type="image/jpeg",
     )
-    await save_image_to_db(sql_session=db_session, image=image)
+    await save_image_to_db(db_session=db_session, image=image)
 
     response = await test_client.delete(endpoint_url, headers=auth_header)
 

@@ -27,51 +27,51 @@ if TYPE_CHECKING:
 # ORM
 
 
-async def get_images_from_db(*, sql_session: AsyncSession) -> ScalarResult[ImageModel]:
+async def get_images_from_db(*, db_session: AsyncSession) -> ScalarResult[ImageModel]:
     """Get all available images from the database.
 
     Arguments:
-        sql_session: SQLAlchemy async database session.
+        db_session: SQLAlchemy async database session.
 
     Returns:
         All available images.
     """
     stmt = select(ImageModel)
-    images_orm = await sql_session.scalars(stmt)
+    images_orm = await db_session.scalars(stmt)
 
     return images_orm
 
 
 async def get_image_from_db(
     *,
-    sql_session: AsyncSession,
+    db_session: AsyncSession,
     image_id: int,
 ) -> ImageModel | None:
     """Get image with passed ID from the database.
 
     Arguments:
-        sql_session: SQLAlchemy async database session.
+        db_session: SQLAlchemy async database session.
         image_id: Image ID.
 
     Returns:
         Requested image, if it exists, `None` otherwise.
     """
     stmt = select(ImageModel).where(ImageModel.id == image_id)
-    image_orm = await sql_session.scalar(stmt)
+    image_orm = await db_session.scalar(stmt)
 
     return image_orm
 
 
-async def save_image_to_db(*, sql_session: AsyncSession, image: ImageModel) -> None:
+async def save_image_to_db(*, db_session: AsyncSession, image: ImageModel) -> None:
     """Save passed image to the database.
 
     Arguments:
-        sql_session: Async SQLAlchemy database session.
+        db_session: Async SQLAlchemy database session.
         image: Image to save.
     """
-    sql_session.add(image)
-    await sql_session.commit()
-    await sql_session.refresh(image)
+    db_session.add(image)
+    await db_session.commit()
+    await db_session.refresh(image)
 
 
 # S3
@@ -323,7 +323,7 @@ async def get_image_model_embeddings(
 
 async def find_similar_images(
     *,
-    sql_session: AsyncSession,
+    db_session: AsyncSession,
     s3_client: "S3Client",
     redis_client: redis.Redis,
     clip_model: SentenceTransformer,
@@ -335,7 +335,7 @@ async def find_similar_images(
     """Find images similar to passed image using passed `Clip` ML model.
 
     Arguments:
-        sql_session: SQLAlchemy async database session.
+        db_session: SQLAlchemy async database session.
         s3_client: Async S3 client.
         redis_client: Async Redis client.
         clip_model: Pretrained `Clip` ML model.
@@ -360,7 +360,7 @@ async def find_similar_images(
 
     # Get all other images
     stmt = select(ImageModel).where(ImageModel.id != image.id)
-    other_images_orm = await sql_session.scalars(stmt)
+    other_images_orm = await db_session.scalars(stmt)
 
     # Get embeddings for those images
     corpus_embeddings_image_ids = []

@@ -27,21 +27,21 @@ async def create_user(username: str) -> None:
     Arguments:
         username: New user's name.
     """
-    session = await resolve_fastapi_dependency(get_db_session)
+    db_session = await resolve_fastapi_dependency(get_db_session)
 
     user = UserModel(name=username)
-    session.add(user)
+    db_session.add(user)
     try:
-        await session.commit()
+        await db_session.commit()
     except exc.IntegrityError as e:
         logger.warning(f"Error when trying to create the user: {e!r}")
     else:
-        await session.refresh(user)
+        await db_session.refresh(user)
         logger.info(
             f"Successfully created user '{user.name}' with API key '{user.api_key}'"
         )
 
-    await session.close()
+    await db_session.close()
 
 
 if __name__ == "__main__":
