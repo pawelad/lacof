@@ -284,5 +284,7 @@ async def delete_image(
             detail="Image not found",
         )
 
-    await db_session.delete(image_orm)
-    await db_session.commit()
+    await image_service.delete_image_from_db(
+        db_session=db_session,
+        image=image_orm,
+    )

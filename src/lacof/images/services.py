@@ -24,9 +24,6 @@ if TYPE_CHECKING:
     from types_aiobotocore_s3 import S3Client
 
 
-# ORM
-
-
 async def get_images_from_db(*, db_session: AsyncSession) -> ScalarResult[ImageModel]:
     """Get all available images from the database.
 
@@ -74,7 +71,15 @@ async def save_image_to_db(*, db_session: AsyncSession, image: ImageModel) -> No
     await db_session.refresh(image)
 
 
-# S3
+async def delete_image_from_db(*, db_session: AsyncSession, image: ImageModel) -> None:
+    """Delete passed image from the database.
+
+    Arguments:
+        db_session: Async SQLAlchemy database session.
+        image: Image to delete.
+    """
+    await db_session.delete(image)
+    await db_session.commit()
 
 
 async def get_image_data_from_s3(
@@ -155,9 +160,6 @@ async def save_image_data_to_s3(
         Key=image.s3_image_data_key,
         ExtraArgs={"ContentType": image.content_type},
     )
-
-
-# ML
 
 
 def calculate_image_model_embeddings(
