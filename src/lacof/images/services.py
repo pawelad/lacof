@@ -10,6 +10,7 @@ import msgpack
 import msgpack_numpy
 import numpy
 import redis.asyncio as redis
+from fastapi import BackgroundTasks, UploadFile
 from PIL import Image
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.util import _convert_to_tensor, semantic_search
@@ -80,6 +81,52 @@ async def delete_image_from_db(*, db_session: AsyncSession, image: ImageModel) -
     """
     await db_session.delete(image)
     await db_session.commit()
+
+
+async def create_image(
+    *,
+    db_session: AsyncSession,
+    s3_client: "S3Client",
+    redis_client: redis.Redis,
+    clip_model: SentenceTransformer,
+    image: ImageModel,
+    image_file: UploadFile,
+    background_tasks: BackgroundTasks,
+) -> None:
+    """Save passed image to the database and upload image file to S3.
+
+    Also trigger a background task that generates and caches Clip model embeddings.
+
+    Arguments:
+        db_session: Async SQLAlchemy database session.
+        s3_client: Async S3 client.
+        redis_client: Async Redis client.
+        clip_model: Pretrained `Clip` ML model.
+        image: Image to save.
+        image_file: Image file.
+        background_tasks: FastAPI background tasks.
+    """
+    await save_image_to_db(db_session=db_session, image=image)
+
+    # If it was only S3, we could 'stream' it, but because we also need it for the
+    # background task, we might as well load it into memory straight away.
+    image_data = BytesIO(await image_file.read())
+
+    # Upload file to S3
+    await save_image_data_to_s3(
+        s3_client=s3_client,
+        image=image,
+        image_data=image_data,
+    )
+
+    # Generate and cache Clip model embeddings as a background task
+    background_tasks.add_task(
+        calculate_and_cache_image_clip_model_embeddings,
+        redis_client=redis_client,
+        clip_model=clip_model,
+        image_data=image_data,
+        cache_key=image.cache_clip_embeddings_key,
+    )
 
 
 async def get_image_data_from_s3(

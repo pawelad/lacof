@@ -1,6 +1,5 @@
 """Images app routes."""
 
-from io import BytesIO
 from typing import TYPE_CHECKING, Annotated
 
 import redis.asyncio as redis
@@ -81,26 +80,14 @@ async def create_image(
             detail=str(e),
         ) from e
 
-    await image_service.save_image_to_db(db_session=db_session, image=image_orm)
-
-    # If it was only S3, we could 'stream' it, but because we also need it for the
-    # background task, we might as well load it into memory straight away.
-    image_data = BytesIO(await file.read())
-
-    # Upload file to S3
-    await image_service.save_image_data_to_s3(
+    await image_service.create_image(
+        db_session=db_session,
         s3_client=s3_client,
-        image=image_orm,
-        image_data=image_data,
-    )
-
-    # Generate and cache Clip model embeddings as a background task
-    background_tasks.add_task(
-        image_service.calculate_and_cache_image_clip_model_embeddings,
         redis_client=redis_client,
         clip_model=request.state.clip_model,
-        image_data=image_data,
-        cache_key=image_orm.cache_clip_embeddings_key,
+        image=image_orm,
+        image_file=file,
+        background_tasks=background_tasks,
     )
 
     image = Image.model_validate(image_orm)
