@@ -24,6 +24,7 @@ def tests(session: nox.Session) -> None:
     )
     # fmt: on
 
+    # TODO: Cross platform pip compile requirements
     # Workaround for `torch` failing on GitHub CI (Linux) because requirements were
     # generated on macOS.See https://github.com/jazzband/pip-tools/issues/585
     if platform == "linux":

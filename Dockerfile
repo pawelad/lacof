@@ -45,6 +45,15 @@ COPY --chown=$USER:$USER requirements/main.txt $APP_DIR/requirements/main.txt
 RUN --mount=type=cache,uid=${UID},gid=${GID},target=$HOME/.cache \
     python -m pip install --no-deps -r requirements/main.txt
 
+# Install Linux specific Python dependencies
+# TODO: Cross platform pip compile requirements
+# Workaround for `torch` failing on GitHub CI (Linux) because requirements were
+# generated on macOS.See https://github.com/jazzband/pip-tools/issues/585
+COPY --chown=$USER:$USER requirements/linux.txt $APP_DIR/requirements/linux.txt
+RUN --mount=type=cache,uid=${UID},gid=${GID},target=$HOME/.cache \
+    python -m pip install --no-deps -r requirements/linux.txt
+
+
 ###########
 #   Dev   #
 ###########
