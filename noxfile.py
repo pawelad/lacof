@@ -1,6 +1,7 @@
 """Lacof Nox sessions."""
 
 import os
+from sys import platform
 
 import nox
 
@@ -22,6 +23,11 @@ def tests(session: nox.Session) -> None:
         "-r", "requirements/dev.txt",
     )
     # fmt: on
+
+    # Workaround for `torch` failing on GitHub CI (Linux) because requirements were
+    # generated on macOS.See https://github.com/jazzband/pip-tools/issues/585
+    if platform == "linux":
+        session.install("-r", "requirements/linux.txt")
 
     session.run("coverage", "run", "-m", "pytest", *dirs)
 
