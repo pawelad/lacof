@@ -3,8 +3,6 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)][black]
 [![py.typed](https://img.shields.io/badge/py-typed-FFD43B)][pep561]
 
-🚧 Work in progress 🚧
-
 ## Running locally
 The easiest way run lacof locally is to install [Docker] and run:
 
