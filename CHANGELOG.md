@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## Unreleased
 
+## [v0.1.0](https://github.com/pawelad/lacof/releases/tag/v0.1.0) - 2024-11-11
 ### Added
 - Initial release.
 
