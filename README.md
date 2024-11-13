@@ -3,6 +3,11 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)][black]
 [![py.typed](https://img.shields.io/badge/py-typed-FFD43B)][pep561]
 
+Simple API to upload images, store them in S3 and find other similar images among
+the uploaded ones.
+
+Created for a take home interview assignment.
+
 ## Running locally
 The easiest way run lacof locally is to install [Docker] and run:
 
